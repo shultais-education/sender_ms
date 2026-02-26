@@ -1,4 +1,5 @@
 from app.celery_app import celery_app
+import asyncio
 
 
 @celery_app.task(
@@ -11,10 +12,14 @@ from app.celery_app import celery_app
     autoretry_for=(ValueError,),
 )
 def send_message(self, message_text: str):
+    from app.services.messages import MessageService
 
-    # raise ValueError("Test error")
+    async def _send():
+        await MessageService.send_email(to="nikita@shultais.ru", subject="Новое сообщение", body=message_text)
 
-    return {
-        "task_id": self.request.id,
-        "processed": message_text.upper()
-    }
+        return {
+            "task_id": self.request.id,
+            "processed": message_text.upper()
+        }
+
+    return asyncio.run(_send())
