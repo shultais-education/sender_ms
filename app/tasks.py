@@ -1,5 +1,6 @@
 from app.celery_app import celery_app
 import asyncio
+from aiosmtplib.errors import SMTPConnectError
 
 
 @celery_app.task(
@@ -9,7 +10,7 @@ import asyncio
     retry_backoff=True,  # Экспоненциальная задержка,
     retry_backoff_max=16,
     # retry_jitter=True,
-    autoretry_for=(ValueError,),
+    autoretry_for=(SMTPConnectError,),
 )
 def send_message(self, message_text: str):
     from app.services.messages import MessageService
