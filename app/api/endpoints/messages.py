@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import status
 from typing import Union, List
+import asyncio
 
 from app.schemas.message import MessageRequest, TaskResponse
 from app.api.dependencies.messages import MessageServiceDep
@@ -18,16 +19,27 @@ async def send_message(
     if isinstance(messages, MessageRequest):
         messages = [messages]
 
-    results = []
+    # results = []
+    #
+    # for message in messages:
+    #     result = await message_service.send_message(
+    #         subject=message.subject,
+    #         text=message.text,
+    #         to=message.to,
+    #         delay=message.delay
+    #     )
+    #     results.append(result)
+    #
+    # return results
 
+    tasks = []
     for message in messages:
-        result = await message_service.send_message(
+        tasks.append(asyncio.create_task(message_service.send_message(
             subject=message.subject,
             text=message.text,
             to=message.to,
             delay=message.delay
-        )
-        results.append(result)
+        )))
 
-    return results
+    return await asyncio.gather(*tasks)
 
