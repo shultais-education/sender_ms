@@ -32,14 +32,17 @@ async def send_message(
     #
     # return results
 
-    tasks = []
-    for message in messages:
-        tasks.append(asyncio.create_task(message_service.send_message(
-            subject=message.subject,
-            text=message.text,
-            to=message.to,
-            delay=message.delay
-        )))
+    # tasks = []
+    # for message in messages:
+    #     tasks.append(asyncio.create_task(message_service.send_message(
+    #         subject=message.subject,
+    #         text=message.text,
+    #         to=message.to,
+    #         delay=message.delay
+    #     )))
 
-    return await asyncio.gather(*tasks)
+    # return await asyncio.gather(*tasks)
+
+    results = [await message_service.send_messages(messages=[m.model_dump() for m in messages])]
+    return results
 

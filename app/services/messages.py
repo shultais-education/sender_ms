@@ -1,8 +1,10 @@
 from app.schemas.message import TaskResponse
 from pydantic import EmailStr
 from app.tasks import send_message as send_message_task
+from app.tasks import send_messages as send_messages_task
 from app.core.config import settings
 import aiosmtplib
+import asyncio
 from email.mime.text import MIMEText
 
 
@@ -19,6 +21,16 @@ class MessageService:
         )
 
     @staticmethod
+    async def send_messages(messages: list[dict]) -> TaskResponse:
+        task = send_messages_task.apply_async(args=[messages])
+
+        return TaskResponse(
+            task_id=task.task_id,
+            status="PENDING",
+            message=f"{len(messages)} задач(и) успешно поставлены в очередь"
+        )
+
+    @staticmethod
     async def send_email(subject: str, text: str, to: EmailStr):
         msg = MIMEText(text)
         msg["Subject"] = subject
@@ -28,3 +40,17 @@ class MessageService:
         async with aiosmtplib.SMTP(hostname=settings.EMAIL_HOST, port=settings.EMAIL_PORT) as smtp:
             await smtp.send_message(msg)
 
+    @staticmethod
+    async def send_emails(messages: list[dict]):
+
+        async with aiosmtplib.SMTP(hostname=settings.EMAIL_HOST, port=settings.EMAIL_PORT) as smtp:
+            tasks = []
+            for message in messages:
+                msg = MIMEText(message["text"])
+                msg["Subject"] = message["subject"]
+                msg["From"] = "noreply@localhost"
+                msg["To"] = message["to"]
+
+                tasks.append(asyncio.create_task(smtp.send_message(msg)))
+
+            await asyncio.gather(*tasks)
