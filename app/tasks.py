@@ -1,4 +1,5 @@
 from app.celery_app import celery_app
+from pydantic import EmailStr
 import asyncio
 from aiosmtplib.errors import SMTPConnectError
 
@@ -12,15 +13,15 @@ from aiosmtplib.errors import SMTPConnectError
     # retry_jitter=True,
     autoretry_for=(SMTPConnectError,),
 )
-def send_message(self, message_text: str):
+def send_message(self, subject: str, text: str, to: EmailStr):
     from app.services.messages import MessageService
 
     async def _send():
-        await MessageService.send_email(to="nikita@shultais.ru", subject="Новое сообщение", body=message_text)
+        await MessageService.send_email(subject=subject, text=text, to=to)
 
         return {
             "task_id": self.request.id,
-            "processed": message_text.upper()
+            "processed": subject
         }
 
     return asyncio.run(_send())

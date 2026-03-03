@@ -1,4 +1,5 @@
 from app.schemas.message import TaskResponse
+from pydantic import EmailStr
 from app.tasks import send_message as send_message_task
 from app.core.config import settings
 import aiosmtplib
@@ -8,8 +9,8 @@ from email.mime.text import MIMEText
 class MessageService:
 
     @staticmethod
-    async def send_message(message: str, delay: int = 0) -> TaskResponse:
-        task = send_message_task.apply_async(args=[message], countdown=delay)
+    async def send_message(subject: str, text: str, to: EmailStr, delay: int = 0) -> TaskResponse:
+        task = send_message_task.apply_async(args=[subject, text, to], countdown=delay)
 
         return TaskResponse(
             task_id=task.task_id,
@@ -18,8 +19,8 @@ class MessageService:
         )
 
     @staticmethod
-    async def send_email(to: str, subject: str, body: str):
-        msg = MIMEText(body)
+    async def send_email(subject: str, text: str, to: EmailStr):
+        msg = MIMEText(text)
         msg["Subject"] = subject
         msg["From"] = "noreply@localhost"
         msg["To"] = to
