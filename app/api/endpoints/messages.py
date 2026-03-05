@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import status
 from typing import Union, List
 
@@ -16,7 +16,8 @@ async def send_message(
         message_service: MessageServiceDep,
         api_key: KeyHeaderDep
 ):
-    print(api_key)
+    if api_key not in ('abc', 'ABC'):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный ключ")
 
     if isinstance(messages, MessageRequest):
         messages = [messages]
