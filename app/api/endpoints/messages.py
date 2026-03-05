@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from fastapi import status
 from typing import Union, List
-import asyncio
 
 from app.schemas.message import MessageRequest, TaskResponse
 from app.api.dependencies.messages import MessageServiceDep
+from app.api.dependencies.security import KeyHeaderDep
 
 
 messages_router = APIRouter(prefix="/messages", tags=["messages"])
@@ -13,8 +13,10 @@ messages_router = APIRouter(prefix="/messages", tags=["messages"])
 @messages_router.post("", response_model=List[TaskResponse], summary="Отправка сообщения", status_code=status.HTTP_202_ACCEPTED)
 async def send_message(
         messages: Union[MessageRequest, List[MessageRequest]],
-        message_service: MessageServiceDep
+        message_service: MessageServiceDep,
+        api_key: KeyHeaderDep
 ):
+    print(api_key)
 
     if isinstance(messages, MessageRequest):
         messages = [messages]
