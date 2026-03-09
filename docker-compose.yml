@@ -63,8 +63,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery-worker
-    volumes:
-      - ./app:/app  # Монтируем код для разработки (опционально)
+    # volumes:
+    #  - ./app:/app  # Монтируем код для разработки (опционально)
     env_file:
       - .env
     environment:
@@ -85,14 +85,18 @@ services:
 
 volumes:
   rabbitmq_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /var/www/SE/Courses/fastapi/microservices/docker_data/sender_ms/rabbitmq
+      o: bind
   redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /var/www/SE/Courses/fastapi/microservices/docker_data/sender_ms/redis
+      o: bind
 
 networks:
   app-network:
     driver: bridge
-#
-#driver: local
-#    driver_opts:
-#      type: none
-#      device: /absolute/path/to/rabbitmq_data
-#      o: bind
