@@ -1,0 +1,98 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # Основной порт для подключения
+      - "15672:15672"    # Порт веб-интерфейса управления
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379"
+      # - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-app
+    ports:
+      - "8030:8000"    # внешний и внутренний порты
+    env_file:
+      - .env
+    environment:
+      BROKER_TYPE: rabbitmq
+      RABBIT_HOST: rabbitmq
+      REDIS_HOST: redis
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    working_dir: /app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - app-network
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    volumes:
+      - ./app:/app  # Монтируем код для разработки (опционально)
+    env_file:
+      - .env
+    environment:
+      RABBIT_HOST: rabbitmq
+      REDIS_HOST: redis
+      EMAIL_HOST: host.docker.internal
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fastapi:
+        condition: service_started
+    working_dir: /
+    command: celery -A app.celery_app worker --loglevel=info
+    networks:
+      - app-network
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
+#
+#driver: local
+#    driver_opts:
+#      type: none
+#      device: /absolute/path/to/rabbitmq_data
+#      o: bind
