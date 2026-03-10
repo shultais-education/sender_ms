@@ -1,7 +1,7 @@
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: rabbitmq
+    container_name: sender-ms-rabbitmq
     ports:
       - "5672:5672"      # Основной порт для подключения
       - "15672:15672"    # Порт веб-интерфейса управления
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
+    container_name: sender-ms-redis
     ports:
       - "6379"
       # - "6379:6379"
@@ -39,9 +39,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastapi-app
+    container_name: sender-ms-app
     ports:
-      - "8030:8000"    # внешний и внутренний порты
+      - "8010:8000"    # внешний и внутренний порты
     env_file:
       - .env
     environment:
@@ -62,7 +62,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: celery-worker
+    container_name: sender-ms-celery-worker
     # volumes:
     #  - ./app:/app  # Монтируем код для разработки (опционально)
     env_file:

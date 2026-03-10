@@ -8,5 +8,5 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan, title="API сообщений", description="Микросервис для отправки сообщений")
+app = FastAPI(lifespan=lifespan, title="API сообщений", description="Микросервис для отправки сообщений", root_path="/api")
 app.include_router(messages_router)
