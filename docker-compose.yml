@@ -50,6 +50,7 @@ services:
       BROKER_TYPE: rabbitmq
       RABBIT_HOST: rabbitmq
       REDIS_HOST: redis
+      EMAIL_HOST: host.docker.internal
     depends_on:
       rabbitmq:
         condition: service_healthy
